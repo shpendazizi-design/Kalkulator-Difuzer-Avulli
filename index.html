@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalkulatori i difuzorit</title>
+<style>
+:root{
+  --bg:#eef2ec;--surface:#fbfcfa;--ink:#1d2a24;--muted:#5d6b63;--line:#cfd9d1;
+  --accent:#2f6b57;--accent-ink:#ffffff;--on:#2f6b57;--off:#8a97a0;--warn:#a4402a;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121a16;--surface:#1b2520;--ink:#e6efe9;--muted:#9fb0a6;--line:#2e3c35;
+  --accent:#6fc2a3;--accent-ink:#0f1a15;--on:#6fc2a3;--off:#6b7a84;--warn:#f0a08a;}}
+:root[data-theme="dark"]{
+  --bg:#121a16;--surface:#1b2520;--ink:#e6efe9;--muted:#9fb0a6;--line:#2e3c35;
+  --accent:#6fc2a3;--accent-ink:#0f1a15;--on:#6fc2a3;--off:#6b7a84;--warn:#f0a08a;}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;line-height:1.45}
+main{max-width:520px;margin:0 auto;padding:20px 16px 32px}
+h1{font-size:1.5rem;margin:4px 0 4px}
+.sub{color:var(--muted);margin:0 0 18px;font-size:.95rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-weight:600;font-size:.95rem;margin:0 0 6px}
+.field{margin-bottom:16px}.field:last-child{margin-bottom:0}
+select,input[type=number]{width:100%;font:inherit;font-size:1.05rem;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hint{color:var(--muted);font-size:.85rem;margin-top:5px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{font:inherit;font-weight:600;padding:12px 0;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{border-radius:12px;padding:14px;border:2px solid var(--on)}
+.box.off{border-color:var(--off)}
+.box .t{font-size:.85rem;color:var(--muted)}
+.box .n{font-size:1.9rem;font-weight:700;line-height:1.15;word-break:break-all}
+.box.on .n{color:var(--on)}.box.off .n{color:var(--off)}
+.box .u{font-size:.85rem;color:var(--muted)}
+.bar{height:14px;border-radius:7px;background:var(--off);opacity:.9;overflow:hidden;margin:14px 0 4px}
+.bar i{display:block;height:100%;background:var(--on)}
+.cyc{display:flex;justify-content:space-between;gap:10px;font-size:1.05rem;margin-top:4px}
+.cyc b{font-size:1.25rem}
+.warn{display:none;margin-top:12px;color:var(--warn);font-weight:600;font-size:.92rem}
+h2{font-size:1.05rem;margin:0 0 10px}
+.small{color:var(--muted);font-size:.82rem;margin-top:12px}
+.mini{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 6px;color:var(--muted)}
+.mini label{margin:0;font-weight:400;font-size:.8rem}
+.mini input[type=number]{width:80px;font-size:.85rem;padding:6px 8px;text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <h1>Kalkulatori i difuzorit</h1>
+  <p class="sub">Gjej kohën ON dhe OFF që e përdor vajin brenda një muaji.</p>
+
+  <div class="panel">
+    <div class="field">
+      <label for="dev">Modeli i difuzorit</label>
+      <select id="dev"></select>
+      <div class="hint" id="rate"></div>
+    </div>
+    <div class="field">
+      <label for="hrs">Orë në ditë që punon biznesi</label>
+      <input id="hrs" type="number" inputmode="decimal" min="1" max="24" step="0.5" value="12">
+    </div>
+    <div class="field">
+      <label>Ditë në javë</label>
+      <div class="seg" id="days">
+        <button type="button" data-d="5" aria-pressed="false">5 ditë</button>
+        <button type="button" data-d="6" aria-pressed="false">6 ditë</button>
+        <button type="button" data-d="7" aria-pressed="true">7 ditë</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="ml">Vaji në muaj (ml)</label>
+      <input id="ml" type="number" inputmode="decimal" min="1" step="1" value="200">
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 id="resTitle">Çdo cikël</h2>
+    <div class="res">
+      <div class="box on"><div class="t">Aparati ON</div><div class="n" id="onS">–</div><div class="u" id="onT"></div></div>
+      <div class="box off"><div class="t">Aparati OFF</div><div class="n" id="offS">–</div><div class="u" id="offT"></div></div>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="fill" style="width:0"></i></div>
+    <div class="hint" id="pct"></div>
+    <div class="warn" id="warn"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Për ditë pune</h2>
+    <div class="cyc"><span>ON <b id="cOn">–</b></span><span>OFF <b id="cOff">–</b></span></div>
+    <div class="small" id="calc"></div>
+  </div>
+
+  <div class="mini">
+    <label for="cyc">Koha e ciklit (sekonda)</label>
+    <input id="cyc" type="number" inputmode="numeric" min="2" step="1" value="200">
+  </div>
+</main>
+
+<script>
+var DEV=[["OY-5",0.0011],["OS-5",0.0011],["OQ499",0.0015],["S300",0.0023],["G500+Mood",0.0009],["Mood 2.0",0.00085],["MidiBlack",0.00035],["OV5-Pro",0.003],["OV2-PRO",0.00138],["S1500",0.0008],["At200",0.0007],["AT400",0.0009],["AT500",0.0007],["At150",0.001],["A2000",0.0017],["G-Air",0.003],["Enjoy with Venturi",0.00089]];
+var $=function(i){return document.getElementById(i)};
+var days=7;
+var CYC={"At150":170,"At200":170,"AT400":170,"AT500":170,"Mood 2.0":60};
+var STEP={"At150":1,"At200":1,"AT400":1,"AT500":1};
+var dev=$("dev");
+DEV.forEach(function(d,i){var o=document.createElement("option");o.value=i;o.textContent=d[0];dev.appendChild(o)});
+
+function num(n){return Math.round(n).toLocaleString("de-DE")}
+function r1(n){return (Math.round(n*10)/10).toLocaleString("de-DE")}
+function rt(n){return String(n).replace(".",",")}
+
+function calc(){
+  var rate=DEV[dev.value][1];
+  var hrs=parseFloat($("hrs").value),ml=parseFloat($("ml").value),cyc=parseFloat($("cyc").value)||200;
+  $("rate").textContent="Përdor "+rt(rate)+" ml në sekondë kur është ON";
+  if(!(hrs>0&&hrs<=24&&ml>0)){$("onS").textContent=$("offS").textContent="–";$("onT").textContent=$("offT").textContent="";$("fill").style.width="0";$("pct").textContent="Shkruaj orët (1–24) dhe sasinë e vajit.";$("cOn").textContent=$("cOff").textContent="–";$("calc").textContent="";$("warn").style.display="none";return}
+  var workDays=days*52/12;
+  var onMonth=ml/rate;
+  var on=onMonth/workDays;
+  var win=hrs*3600;
+  var off=win-on;
+  var over=on>win;
+  var shownOn=over?win:on, shownOff=over?0:off;
+  var p=shownOn/win*100;
+  var cOn=cyc*p/100,cOff=cyc-cOn;
+  var stepped=!!STEP[DEV[dev.value][0]],rOn=Math.round(cOn),need=cOn;
+  if(stepped){rOn=Math.min(25,Math.max(5,Math.round(cOn/5)*5));p=rOn/cyc*100;shownOn=win*p/100;shownOff=win-shownOn;}
+  $("resTitle").textContent="Çdo cikël prej "+num(cyc)+" sekondash";
+  $("onS").textContent=num(rOn);$("offS").textContent=num(cyc-rOn);
+  $("onT").textContent="sekonda";$("offT").textContent="sekonda";
+  $("cOn").textContent=num(shownOn)+" s";$("cOff").textContent=num(shownOff)+" s";
+  $("fill").style.width=p+"%";
+  $("pct").textContent="Aparati punon "+r1(p)+"% të "+rt(hrs)+" orëve të punës.";
+  var w=$("warn");
+  if(over){
+    var maxMl=win*rate*workDays;
+    w.style.display="block";
+    w.textContent="Ky model nuk mund ta përdorë "+rt(ml)+" ml në muaj, edhe nëse punon pa pushim. Maksimumi është rreth "+num(Math.floor(maxMl))+" ml. Zgjidh një model më të fortë ose më pak vaj.";
+  }else{
+    w.style.display="none";
+  }
+  $("calc").textContent=(stepped?"ON rrumbullakoset në hapa prej 5 sekondash (5-10-15-20-25), maksimumi 25. "+(need>25?"Duhej "+r1(need)+" s, por kufiri është 25. ":"")+"Shpenzimi real me këtë cilësim: rreth "+num(shownOn*workDays*rate)+" ml në muaj. ":"")+"Bazuar në "+r1(workDays)+" ditë pune në muaj (52 javë ÷ 12 × "+days+" ditë). Koha totale ON në muaj: "+num(onMonth)+" sekonda.";
+}
+
+document.querySelectorAll("#days button").forEach(function(b){
+  b.addEventListener("click",function(){
+    days=+b.dataset.d;
+    document.querySelectorAll("#days button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
+    calc();
+  });
+});
+["dev","hrs","ml","cyc"].forEach(function(i){$(i).addEventListener("input",calc)});
+$("dev").addEventListener("change",function(){$("cyc").value=CYC[DEV[dev.value][0]]||200;calc()});
+calc();
+</script>
+</body>
+</html>
